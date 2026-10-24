@@ -104,7 +104,7 @@ python skill/scripts/render.py \
 │  ├─ snapshot-20261024-am.json   原始快照（8 城 31 店 155 编码）
 │  └─ analysis.json               计算结果
 ├─ index.html                  报告成品（GitHub Pages 首页）
-└─ images/preview.png
+└─ images/cover.svg            矢量封面
 ```
 
 ---
