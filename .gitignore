@@ -4,3 +4,4 @@ __pycache__/
 .env
 *.log
 images/preview.png
+.git-rewrite/
