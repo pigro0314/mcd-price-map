@@ -109,9 +109,9 @@ footer{padding:40px 0 0;font-size:13px;color:var(--muted);line-height:1.8}
       <p>深圳同一商品编码「芝芝火腿扒堡组合」在两家门店分别是 <b>9.9 元</b> 和 <b>18.0 元</b>。差价不来自城市，来自点位。</p>
     </div>
     <div class="card">
-      <div class="n">47 款</div>
+      <div class="n">{{WIDTH_INTRA}} 款</div>
       <div class="t">你想要的未必有</div>
-      <p>门店在售 <b>52–99 款</b>。早餐时段同一城市内，最全和最窄的门店相差 47 款商品。</p>
+      <p>门店在售 <b>52–99 款</b>。同一时段、同一城市内，最全与最窄的门店相差 {{WIDTH_INTRA}} 款（{{WIDTH_CITY}}）。</p>
     </div>
   </div>
 </section>
@@ -296,6 +296,12 @@ def main():
     basket_list = "、".join(i["name"] for i in an["basket"]["items"])
     cheap_city = min(basket_totals, key=basket_totals.get)
     dear_city = max(basket_totals, key=basket_totals.get)
+
+    by_city = {}
+    for r in an["store_rows"]:
+        by_city.setdefault(r["city"], []).append(r["items"])
+    width_intra, width_city = max(
+        ((max(v) - min(v), c) for c, v in by_city.items()), key=lambda x: x[0])
     pct = round(spread / lo * 100, 1)
     meta = "%s 采集，%d 城 %d 店，%d 个商品编码" % (
         an.get("collected_at", ""), an["cities"], an["stores"], an["unique_codes"])
@@ -305,6 +311,8 @@ def main():
             .replace("{{BASKET_LIST}}", basket_list)
             .replace("{{CHEAP_CITY}}", cheap_city)
             .replace("{{DEAR_CITY}}", dear_city)
+            .replace("{{WIDTH_INTRA}}", str(width_intra))
+            .replace("{{WIDTH_CITY}}", width_city)
             .replace("{{BASKET_MIN}}", "%.2f" % lo)
             .replace("{{BASKET_MAX}}", "%.2f" % hi)
             .replace("{{BASKET_SPREAD}}", "%.2f" % spread)
