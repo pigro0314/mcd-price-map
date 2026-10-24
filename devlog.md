@@ -41,12 +41,12 @@
 
 **先写探针，再写业务代码**。没有现成的 MCP 客户端可用，自建最小实现。
 
-产物：`_probe/probe.py`、`_probe/mcd_client.py`（后整理为 `skill/scripts/mcd_client.py`）、`_probe/tools.json`
+产物：探针脚本与完整 `tools.json` schema（开发期临时目录，未纳入仓库；客户端固化为 `skill/scripts/mcd_client.py`）
 
 执行 `initialize` → `tools/list`，实测结果：
 
 - 返回 **35 个工具**（官方文档列 33 个，多出 `query-promotions`、`query-survey-coupon`）
-- `_probe/tools.json` 保存了完整 `inputSchema`，逐个确认必传参数：
+- `tools/list` 返回的完整 `inputSchema` 已逐个确认必传参数：
   - `query-nearby-stores`：必传 `beType` + `searchType`；`searchType=2` 时 `city`、`keyword` 必填
   - `query-meals`：必传 `storeCode` + `orderType` + `beType`；到店自取为 `orderType=1, beType=1`
 
@@ -59,7 +59,7 @@
 | 3 | `query-meals` 的 `data.meals` 是**字典**（key 即商品编码），不是数组 | 按字典处理；按数组处理会得到 0 条 |
 | 4 | 门店菜单随时段变化：08:07 拉北京光华路世纪财富中心，只返回早餐 SKU，巨无霸不在列表里 | 采集时段写进快照的 `collected_at`，结论只在同时段内比较 |
 
-坑 3 的验证样本：`_probe/snapshot-beijing-guomao.json`（08:08，单店 86 件）。
+坑 3 的验证样本：08:08 的单店快照（86 件），确认 `data.meals` 为字典结构。
 
 ---
 
@@ -131,7 +131,7 @@
 | v2 | 城市篮子图从 0 起算，8 根柱子等长，看不出差异 | 改为**以最低城市为基准画差值**——柱子几乎为零本身就是"城市间没差"的证据 |
 | v3 | 菜单宽度口径写错：原写"全域极差 47 件" | 改为"同城极差 42 件"，并单独提交 commit `0eca94c` |
 
-截图留档：`_probe/shot1.png` ~ `shot4.png`，成品封面 `images/preview.png`。
+封面成品：`images/cover.svg`（矢量，随仓库分发）。
 
 ---
 

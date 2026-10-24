@@ -91,6 +91,7 @@ python skill/scripts/render.py \
 ├─ MCP_INTEGRATION.md          MCP 接入说明：用了哪些工具、怎么串
 ├─ mcp-config.example.json     脱敏配置示例
 ├─ workbuddy.md                WorkBuddy 开发对话记录
+├─ devlog.md                   逐条操作日志（含被推翻的结论与返工原因）
 ├─ skill/
 │  ├─ SKILL.md                 技能定义：给 Agent 的执行规则
 │  └─ scripts/
