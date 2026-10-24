@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="麦价地图：8 城 31 家麦当劳实测比价">
+  <rect width="1200" height="630" fill="#f7f5f2"/>
+  <rect x="0" y="0" width="1200" height="8" fill="#c8102e"/>
+
+  <g font-family="PingFang SC, Microsoft YaHei, Noto Sans SC, sans-serif">
+    <rect x="72" y="74" width="286" height="34" rx="17" fill="#fdecef"/>
+    <text x="90" y="97" font-size="16" letter-spacing="1.5" fill="#c8102e">麦当劳 MCP 创意开发大赛 · 参赛作品</text>
+
+    <text x="72" y="196" font-size="78" font-weight="700" fill="#1c1b1a" letter-spacing="-2">麦价地图</text>
+    <text x="72" y="248" font-size="30" fill="#6f6a66">8 城 31 家门店的实时菜单比价</text>
+
+    <text x="72" y="330" font-size="40" font-weight="700" fill="#c8102e">81.8%</text>
+    <text x="72" y="360" font-size="17" fill="#6f6a66">同城同码最大价差</text>
+
+    <text x="300" y="330" font-size="40" font-weight="700" fill="#1c1b1a">1.4%</text>
+    <text x="300" y="360" font-size="17" fill="#6f6a66">城市之间价差</text>
+
+    <text x="470" y="330" font-size="40" font-weight="700" fill="#1c1b1a">155</text>
+    <text x="470" y="360" font-size="17" fill="#6f6a66">商品编码</text>
+
+    <text x="72" y="440" font-size="22" fill="#1c1b1a">全国基本统一价格带，</text>
+    <text x="72" y="478" font-size="22" font-weight="700" fill="#1c1b1a">价差发生在点位，不在城市。</text>
+
+    <text x="72" y="560" font-size="15" fill="#9a9188">数据：2026-10-24 08:10 快照 · 到店自取 · 同款判定仅认商品编码</text>
+  </g>
+
+  <g transform="translate(720,110)">
+    <text x="0" y="0" font-size="16" fill="#6f6a66">早餐篮子逐城合计差额（元）</text>
+    <g transform="translate(0,26)">
+      <g font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="15" fill="#1c1b1a">
+        <text x="0" y="20">深圳</text><rect x="60" y="6" width="300" height="18" rx="5" fill="#c8102e"/>
+        <text x="372" y="20" fill="#6f6a66">+2.25</text>
+
+        <text x="0" y="60">杭州</text><rect x="60" y="46" width="233" height="18" rx="5" fill="#e08a94"/>
+        <text x="372" y="60" fill="#6f6a66">+1.75</text>
+
+        <text x="0" y="100">西安</text><rect x="60" y="86" width="233" height="18" rx="5" fill="#e08a94"/>
+        <text x="372" y="100" fill="#6f6a66">+1.75</text>
+
+        <text x="0" y="140">成都</text><rect x="60" y="126" width="200" height="18" rx="5" fill="#eba7ae"/>
+        <text x="372" y="140" fill="#6f6a66">+1.50</text>
+
+        <text x="0" y="180">武汉</text><rect x="60" y="166" width="200" height="18" rx="5" fill="#eba7ae"/>
+        <text x="372" y="180" fill="#6f6a66">+1.50</text>
+
+        <text x="0" y="220">北京</text><rect x="60" y="206" width="67" height="18" rx="5" fill="#f2c3c8"/>
+        <text x="372" y="220" fill="#6f6a66">+0.50</text>
+
+        <text x="0" y="260">上海</text><rect x="60" y="246" width="67" height="18" rx="5" fill="#f2c3c8"/>
+        <text x="372" y="260" fill="#6f6a66">+0.50</text>
+
+        <text x="0" y="300">广州</text><rect x="60" y="286" width="2" height="18" rx="1" fill="#d9d3cc"/>
+        <text x="372" y="300" fill="#6f6a66">基准</text>
+      </g>
+    </g>
+    <text x="0" y="368" font-size="15" fill="#9a9188">14 件跨城共有商品 · 逐城取门店中位价</text>
+  </g>
+</svg>

@@ -2,7 +2,7 @@
 
 **用麦当劳官方 MCP 扫 8 个城市 31 家门店的实时菜单，回答一个问题：同一份东西，哪里更便宜。**
 
-![预览](images/preview.png)
+![麦价地图](images/cover.svg)
 
 > 在线报告：[`index.html`](index.html)（单文件，无外部依赖，可直接 GitHub Pages 托管）
 
