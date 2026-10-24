@@ -1,0 +1,321 @@
+# -*- coding: utf-8 -*-
+"""把 analysis.json 渲染成单文件 HTML 报告（无 CDN、无 JS 依赖，可直接放 GitHub Pages）。"""
+import argparse
+import json
+import os
+
+TPL = r"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>麦价地图 · 8 城 31 家麦当劳实测比价</title>
+<meta name="description" content="基于麦当劳 MCP 的公开菜品数据，对 8 个城市 31 家门店做同款同码比价。">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#c8102e; --red-soft:#fdecef; --yellow:#ffc72c; --ink:#1c1b1a;
+  --muted:#6f6a66; --line:#e6e2dd; --bg:#f7f5f2; --card:#fff;
+}
+body{background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1020px;margin:0 auto;padding:0 24px 80px}
+header{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+.kicker{display:inline-block;font-size:19px;letter-spacing:.12em;color:var(--red);
+  background:var(--red-soft);border-radius:999px;padding:4px 14px;margin-bottom:20px}
+h1{font-size:46px;line-height:1.15;letter-spacing:-.02em;margin-bottom:14px}
+h1 em{font-style:normal;color:var(--red)}
+.sub{font-size:17px;color:var(--muted);max-width:640px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:36px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 16px}
+.kpi b{display:block;font-size:32px;line-height:1.2;letter-spacing:-.01em}
+.kpi span{font-size:13px;color:var(--muted)}
+.kpi.hot b{color:var(--red)}
+section{padding:52px 0 8px;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-size:24px;letter-spacing:-.01em;margin-bottom:8px}
+h2 small{display:block;font-size:14px;font-weight:400;color:var(--muted);margin-top:6px;letter-spacing:0}
+.lead{color:var(--ink);font-size:16px;margin:14px 0 26px;max-width:720px}
+.lead b{color:var(--red)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 20px}
+.card .n{font-size:34px;font-weight:700;color:var(--red);line-height:1.15;letter-spacing:-.02em}
+.card .t{font-size:15px;font-weight:600;margin:8px 0 6px}
+.card p{font-size:13.5px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:#faf8f6;font-weight:600;font-size:12.5px;color:var(--muted);letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:6px;background:var(--red-soft);color:var(--red)}
+.tag.g{background:#eef7ee;color:#2f6b3a}
+.bars{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.bar{display:grid;grid-template-columns:96px 1fr 74px;align-items:center;gap:12px;padding:5px 0}
+.bar .lbl{font-size:13.5px;color:var(--ink)}
+.bar .track{background:#f1ede8;border-radius:6px;height:16px;position:relative;overflow:hidden}
+.bar .fill{height:100%;background:linear-gradient(90deg,#e8a0a8,#c8102e);border-radius:6px}
+.bar .fill.alt{background:linear-gradient(90deg,#f6d98a,#e0a800)}
+.bar .val{font-size:13px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);margin-top:14px;line-height:1.65}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.box h3{font-size:15px;margin-bottom:10px}
+.box ul{list-style:none}
+.box li{font-size:13.5px;color:var(--muted);padding:5px 0;border-bottom:1px dashed var(--line)}
+.box li:last-child{border-bottom:0}
+.box li b{color:var(--ink);font-weight:600}
+code{background:#f1ede8;border-radius:5px;padding:1px 6px;font-size:13px;font-family:ui-monospace,Consolas,monospace}
+pre{background:#231f1d;color:#f4efe9;border-radius:12px;padding:18px 20px;overflow-x:auto;
+  font-size:13px;line-height:1.75;font-family:ui-monospace,Consolas,monospace;margin-top:12px}
+pre .c{color:#9a9188}
+footer{padding:40px 0 0;font-size:13px;color:var(--muted);line-height:1.8}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+@media (max-width:820px){
+  h1{font-size:32px}.kpis{grid-template-columns:repeat(2,1fr)}
+  .cards{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}
+  .bar{grid-template-columns:78px 1fr 62px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">麦当劳 MCP 创意开发大赛 · 参赛作品</div>
+  <h1>麦价地图：<em>同一座城市</em><br>同一份早餐，最多差 81.8%</h1>
+  <p class="sub">我用麦当劳 MCP 扫了 8 个城市 31 家门店的实时菜单，按商品编码逐一配对。
+  结论有点反直觉：城市之间几乎同价，真正的价差发生在你所在的那栋楼。</p>
+  <div class="kpis">
+    <div class="kpi"><b>8</b><span>城市</span></div>
+    <div class="kpi"><b>31</b><span>门店</span></div>
+    <div class="kpi"><b>155</b><span>商品编码</span></div>
+    <div class="kpi hot"><b>81.8%</b><span>同城同码最大价差</span></div>
+  </div>
+</header>
+
+<section>
+  <h2>三条结论</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="n">1.4%</div>
+      <div class="t">城市之间几乎同价</div>
+      <p>14 件早餐篮子逐城合计，8 城落在 <b>161.50–163.75 元</b>，极差 2.25 元。为了便宜跨城换店，没有意义。</p>
+    </div>
+    <div class="card">
+      <div class="n">81.8%</div>
+      <div class="t">同城不同点位差很多</div>
+      <p>深圳同一商品编码「芝芝火腿扒堡组合」在两家门店分别是 <b>9.9 元</b> 和 <b>18.0 元</b>。差价不来自城市，来自点位。</p>
+    </div>
+    <div class="card">
+      <div class="n">47 款</div>
+      <div class="t">你想要的未必有</div>
+      <p>门店在售 <b>52–99 款</b>。早餐时段同一城市内，最全和最窄的门店相差 47 款商品。</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>城市早餐篮子排名<small>14 件跨城共有商品，逐城取门店中位价后求和 · 越低越便宜</small></h2>
+  <div class="bars" id="basket"></div>
+  <p class="note">篮子商品：{{BASKET_LIST}}。逐城合计 {{CHEAP_CITY}} 最低（{{BASKET_MIN}} 元）、
+  {{DEAR_CITY}} 最高（{{BASKET_MAX}} 元），极差 {{BASKET_SPREAD}} 元，占 {{BASKET_PCT}}%。
+  麦当劳在中国基本执行统一价格带，城市不是变量。</p>
+</section>
+
+<section>
+  <h2>同款同码，价格能差多少<small>只按商品编码配对，名称相同但编码不同的一律不算同款</small></h2>
+  <table id="spread">
+    <thead><tr><th>商品</th><th class="num">最低</th><th class="num">最高</th><th class="num">价差</th><th class="num">幅度</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="note">同一份「脆香油条豆浆组合」最低 17.0 元、最高 28.5 元。这类差异多数不是菜单定价，而是<b>门店维度的促销参与状态不同</b>——
+  有的门店挂着活动价，有的门店按原价卖。</p>
+</section>
+
+<section>
+  <h2>哪家门店整体更贵<small>该店可比商品中，高于同城中位价的占比与累计差额</small></h2>
+  <div class="bars" id="premium"></div>
+  <p class="note">深圳兴融二路（华融大厦）在 55 个可比商品里有 36 个高于同城中位价，累计贵 57.3 元，是本次样本里最明显的点位溢价门店。
+  写字楼、交通枢纽类门店的加价，比城市差异大一个量级。</p>
+</section>
+
+<section>
+  <h2>门店的菜单宽度<small>同一时段在售商品数量 · 下列为最窄 8 家与最宽 8 家（共 31 家样本）</small></h2>
+  <div class="bars" id="width"></div>
+  <p class="note">最窄的是成都春熙路地铁站快捷小站（52 款），最宽的是广州体育东潮流站与武汉江汉路大汉口（99 款）。
+  快取小站的品类被压缩，想凑齐一顿完整早餐不一定凑得出来。</p>
+</section>
+
+<section>
+  <h2>一个必须写进方法论的坑<small>按商品名称比价，会得出看似惊人但完全错误的结论</small></h2>
+  <div class="grid2">
+    <div class="box">
+      <h3>同名不同码（真实样本）</h3>
+      <ul id="sameName"></ul>
+    </div>
+    <div class="box">
+      <h3>这意味着什么</h3>
+      <ul>
+        <li><b>「精选麦满分套餐」</b>在编码层面是 3 个不同商品，价格 13.5 / 15.3 / 28.5 元</li>
+        <li>如果只按名字匹配，会把 <b>28.5 元的双人份</b> 和 <b>13.5 元的单人份</b> 算成同一个商品，得出「同款相差 111%」的假新闻</li>
+        <li>本项目所有价差，只认 <code>code</code> 严格相等</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>怎么复现<small>整条链路只用了 2 个 MCP 工具，任何申请到 Token 的账号都能跑出同样的表</small></h2>
+  <div class="grid2">
+    <div class="box">
+      <h3>调用顺序</h3>
+      <ul>
+        <li><b>1 · query-nearby-stores</b> 按城市 + 地标取门店，过滤营业中</li>
+        <li><b>2 · query-meals</b> 逐店拉实时菜单（<code>orderType=1, beType=1</code>）</li>
+        <li><b>3</b> 本地按 <code>code</code> 建矩阵，算中位价与价差</li>
+        <li><b>4</b> 渲染成本页</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>命令</h3>
+      <pre><span class="c"># 1. 采集（8 城 × 4 店）</span>
+python skill/scripts/collect_batch.py breakfast 4
+
+<span class="c"># 2. 分析</span>
+python skill/scripts/analyze.py \
+  --snap data/snapshot-breakfast.json \
+  --out data/analysis.json
+
+<span class="c"># 3. 出报告</span>
+python skill/scripts/render.py \
+  --analysis data/analysis.json \
+  --out demo/index.html</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p><b>数据口径</b>：{{META}}。仅采集「到店自取」渠道在售商品；未逐项核验套餐组成（可用 <code>query-meal-detail</code> 延伸）；
+  价格与供应状态以麦当劳官方渠道实时结果为准。</p>
+  <p><b>本项目为麦当劳程序员节创意开发大赛参赛作品，由参赛者独立开发，非麦当劳官方产品。</b>
+  项目输出仅供参考，不构成医疗、营养或其他专业建议。</p>
+</footer>
+</div>
+
+<script>
+const DATA = {{DATA}};
+
+function bar(el, rows, fmt, cls){
+  const max = Math.max(...rows.map(r=>r.v));
+  el.innerHTML = rows.map(r=>
+    '<div class="bar"><div class="lbl">'+r.k+'</div>'+
+    '<div class="track"><div class="fill '+(cls||'')+'" style="width:'+(r.v/max*100).toFixed(1)+'%"></div></div>'+
+    '<div class="val">'+fmt(r.v)+'</div></div>'
+  ).join('');
+}
+
+const bmin = Math.min(...DATA.basket.map(r=>r.v));
+const bmax = Math.max(...DATA.basket.map(r=>r.v));
+const dmax = Math.max(bmax - bmin, 0.01);
+document.getElementById('basket').innerHTML = DATA.basket.map(r=>{
+  const d = r.v - bmin;
+  const w = d / dmax * 100;
+  return '<div class="bar"><div class="lbl">'+r.k+'</div>'+
+    '<div class="track"><div class="fill" style="width:'+Math.max(w,0.6).toFixed(1)+'%;opacity:'+(d>0?1:.2)+'"></div></div>'+
+    '<div class="val">'+(d>0?'+'+d.toFixed(2):'基准')+'</div></div>';
+}).join('');
+
+
+bar(document.getElementById('premium'),
+  DATA.premium,
+  v=>v+'%');
+
+bar(document.getElementById('width'),
+  DATA.width,
+  v=>v+' 款', 'alt');
+
+document.querySelector('#spread tbody').innerHTML = DATA.spreads.map(r=>
+  '<tr><td>'+r.n+'</td><td class="num">'+r.lo.toFixed(1)+'</td><td class="num">'+r.hi.toFixed(1)+
+  '</td><td class="num"><span class="tag">'+r.sp.toFixed(1)+'</span></td><td class="num">+'+r.pc+'%</td></tr>'
+).join('');
+
+document.getElementById('sameName').innerHTML = DATA.sameName.map(r=>
+  '<li><b>'+r.name+'</b> · '+r.codes+'</li>'
+).join('');
+</script>
+</body>
+</html>
+"""
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--analysis", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+
+    with open(a.analysis, "r", encoding="utf-8") as f:
+        an = json.load(f)
+
+    basket_totals = an["basket"]["total_by_city"]
+    basket_rows = [{"k": c, "v": v} for c, v in
+                   sorted(basket_totals.items(), key=lambda x: -x[1])]
+    lo = min(basket_totals.values())
+    hi = max(basket_totals.values())
+    spread = round(hi - lo, 2)
+
+    premium = [{
+        "k": r["storeName"].replace("麦当劳", "")[:14],
+        "v": r["ratio"],
+    } for r in an["store_premium"][:8]]
+
+    rows_by_width = sorted(an["store_rows"], key=lambda x: x["items"])
+    picked = rows_by_width[:8] + rows_by_width[-8:]
+    width = [{
+        "k": r["storeName"].replace("麦当劳", "")[:13],
+        "v": r["items"],
+    } for r in picked]
+
+    spreads = [{
+        "n": r["name"], "lo": r["min"], "hi": r["max"],
+        "sp": r["spread"], "pc": r["pct"],
+    } for r in an["top_spreads"][:8]]
+
+    same_name = [{
+        "name": r["name"],
+        "codes": "%d 个编码 · 价格 %s" % (
+            len(r["variants"]),
+            " / ".join(str(v["prices"][0]) for v in r["variants"])),
+    } for r in an["diff_code_same_name"][:5]]
+
+    data = {"basket": basket_rows, "premium": premium, "width": width,
+            "spreads": spreads, "sameName": same_name}
+
+    basket_list = "、".join(i["name"] for i in an["basket"]["items"])
+    cheap_city = min(basket_totals, key=basket_totals.get)
+    dear_city = max(basket_totals, key=basket_totals.get)
+    pct = round(spread / lo * 100, 1)
+    meta = "%s 采集，%d 城 %d 店，%d 个商品编码" % (
+        an.get("collected_at", ""), an["cities"], an["stores"], an["unique_codes"])
+
+    html = (TPL
+            .replace("{{DATA}}", json.dumps(data, ensure_ascii=False))
+            .replace("{{BASKET_LIST}}", basket_list)
+            .replace("{{CHEAP_CITY}}", cheap_city)
+            .replace("{{DEAR_CITY}}", dear_city)
+            .replace("{{BASKET_MIN}}", "%.2f" % lo)
+            .replace("{{BASKET_MAX}}", "%.2f" % hi)
+            .replace("{{BASKET_SPREAD}}", "%.2f" % spread)
+            .replace("{{BASKET_PCT}}", "%.1f" % pct)
+            .replace("{{META}}", meta))
+
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+    with open(a.out, "w", encoding="utf-8") as f:
+        f.write(html)
+    print("已生成 %s（%.1f KB）" % (a.out, len(html.encode()) / 1024))
+
+
+if __name__ == "__main__":
+    main()
